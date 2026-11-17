@@ -1,0 +1,294 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny all undeclared paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Primitives ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function adminConfigExists() {
+      return exists(/databases/$(database)/documents/security/adminAccess);
+    }
+
+    function adminConfig() {
+      return get(/databases/$(database)/documents/security/adminAccess).data;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        (adminConfigExists()
+          ? (
+              request.auth.token.email.lower() == adminConfig().primaryEmail ||
+              request.auth.token.email.lower() in adminConfig().allowedEmails
+            )
+          : (request.auth.token.email.lower() == 'smohamedrasith0@gmail.com')
+        ) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Validation Blueprints ---
+    function isValidBrandSettings(data) {
+      return data.keys().hasAll(['companyName', 'tagline', 'logoUrl', 'aboutHeadline', 'aboutDescription', 'updatedAt'])
+        && data.keys().hasOnly(['companyName', 'tagline', 'logoUrl', 'aboutHeadline', 'aboutDescription', 'updatedAt'])
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 80
+        && data.tagline is string && data.tagline.size() >= 4 && data.tagline.size() <= 240
+        && data.logoUrl is string && data.logoUrl.size() <= 400000
+        && data.aboutHeadline is string && data.aboutHeadline.size() >= 4 && data.aboutHeadline.size() <= 140
+        && data.aboutDescription is string && data.aboutDescription.size() >= 10 && data.aboutDescription.size() <= 1200
+        && data.updatedAt == request.time;
+    }
+
+    function isValidContactSettings(data) {
+      return data.keys().hasAll(['whatsappNumber', 'instagramUrl', 'contactEmail', 'updatedAt'])
+        && data.keys().hasOnly(['whatsappNumber', 'instagramUrl', 'contactEmail', 'updatedAt'])
+        && data.whatsappNumber is string && data.whatsappNumber.size() <= 30
+        && data.instagramUrl is string && data.instagramUrl.size() <= 240
+        && data.contactEmail is string && data.contactEmail.size() <= 160
+        && data.updatedAt == request.time;
+    }
+
+    function isValidCatalogState(data) {
+      return data.keys().hasAll(['portfolioInitialized', 'servicesInitialized', 'pricingInitialized', 'testimonialsInitialized', 'updatedAt'])
+        && data.keys().hasOnly(['portfolioInitialized', 'servicesInitialized', 'pricingInitialized', 'testimonialsInitialized', 'updatedAt'])
+        && data.portfolioInitialized is bool
+        && data.servicesInitialized is bool
+        && data.pricingInitialized is bool
+        && data.testimonialsInitialized is bool
+        && data.updatedAt == request.time;
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll(['title', 'description', 'iconName', 'order', 'featured', 'active', 'updatedAt'])
+        && data.keys().hasOnly(['title', 'description', 'iconName', 'order', 'featured', 'active', 'updatedAt'])
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 100
+        && data.description is string && data.description.size() >= 10 && data.description.size() <= 400
+        && data.iconName is string && data.iconName.size() >= 2 && data.iconName.size() <= 40
+        && data.order is number && data.order >= 0 && data.order <= 1000
+        && data.featured is bool
+        && data.active is bool
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPortfolio(data) {
+      return data.keys().hasAll(['title', 'category', 'description', 'thumbnailUrl', 'videoUrl', 'duration', 'clientName', 'isPlaceholder', 'order', 'updatedAt'])
+        && data.keys().hasOnly(['title', 'category', 'description', 'thumbnailUrl', 'videoUrl', 'duration', 'clientName', 'isPlaceholder', 'order', 'updatedAt'])
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 120
+        && data.category in ['Advertisements', 'Real Estate', 'Product Videos', 'Business Promotions', 'Creative Animations']
+        && data.description is string && data.description.size() >= 10 && data.description.size() <= 500
+        && data.thumbnailUrl is string && data.thumbnailUrl.size() >= 1 && data.thumbnailUrl.size() <= 400000
+        && data.videoUrl is string && data.videoUrl.size() <= 500
+        && data.duration is string && data.duration.size() <= 20
+        && data.clientName is string && data.clientName.size() <= 80
+        && data.isPlaceholder is bool
+        && data.order is number && data.order >= 0 && data.order <= 1000
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPortfolioVideo(data) {
+      return data.keys().hasAll(['mimeType', 'fileName', 'totalChunks', 'totalBytes', 'updatedAt'])
+        && data.keys().hasOnly(['mimeType', 'fileName', 'totalChunks', 'totalBytes', 'updatedAt'])
+        && data.mimeType is string && data.mimeType.size() >= 6 && data.mimeType.size() <= 60
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 160
+        && data.totalChunks is number && data.totalChunks >= 1 && data.totalChunks <= 60
+        && data.totalBytes is number && data.totalBytes >= 1 && data.totalBytes <= 21000000
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPortfolioVideoChunk(data) {
+      return data.keys().hasAll(['index', 'data'])
+        && data.keys().hasOnly(['index', 'data'])
+        && data.index is number && data.index >= 0 && data.index < 60
+        && data.data is string && data.data.size() >= 1 && data.data.size() <= 500000;
+    }
+
+    function isValidPricingTier(data) {
+      return data.keys().hasAll(['name', 'priceLabel', 'summary', 'features', 'highlighted', 'order', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'priceLabel', 'summary', 'features', 'highlighted', 'order', 'updatedAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 60
+        && data.priceLabel is string && data.priceLabel.size() >= 2 && data.priceLabel.size() <= 60
+        && data.summary is string && data.summary.size() >= 5 && data.summary.size() <= 260
+        && data.features is list && data.features.size() >= 1 && data.features.size() <= 10
+        && data.features[0] is string && data.features[0].size() <= 140
+        && data.highlighted is bool
+        && data.order is number && data.order >= 0 && data.order <= 100
+        && data.updatedAt == request.time;
+    }
+
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['customerName', 'role', 'company', 'quote', 'rating', 'photoUrl', 'isSample', 'order', 'updatedAt'])
+        && data.keys().hasOnly(['customerName', 'role', 'company', 'quote', 'rating', 'photoUrl', 'isSample', 'order', 'updatedAt'])
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 80
+        && data.role is string && data.role.size() >= 2 && data.role.size() <= 80
+        && data.company is string && data.company.size() >= 2 && data.company.size() <= 80
+        && data.quote is string && data.quote.size() >= 10 && data.quote.size() <= 600
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.photoUrl is string && data.photoUrl.size() <= 400000
+        && data.isSample is bool
+        && data.order is number && data.order >= 0 && data.order <= 100
+        && data.updatedAt == request.time;
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['name', 'businessName', 'email', 'whatsapp', 'serviceRequired', 'projectDescription', 'status', 'adminNotes', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'businessName', 'email', 'whatsapp', 'serviceRequired', 'projectDescription', 'status', 'adminNotes', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 120
+        && data.businessName is string && data.businessName.size() >= 1 && data.businessName.size() <= 140
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160 && data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && data.whatsapp is string && data.whatsapp.size() >= 5 && data.whatsapp.size() <= 30
+        && data.serviceRequired is string && data.serviceRequired.size() >= 2 && data.serviceRequired.size() <= 120
+        && data.projectDescription is string && data.projectDescription.size() >= 10 && data.projectDescription.size() <= 3000
+        && data.status in ['new', 'in_review', 'replied', 'archived']
+        && data.adminNotes is string && data.adminNotes.size() <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'addedAt'])
+        && data.keys().hasOnly(['email', 'addedAt'])
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.addedAt == request.time;
+    }
+
+    function isValidAdminAccessConfig(data) {
+      return data.keys().hasAll(['primaryEmail', 'allowedEmails', 'updatedBy', 'updatedAt'])
+        && data.keys().hasOnly(['primaryEmail', 'allowedEmails', 'updatedBy', 'updatedAt'])
+        && data.primaryEmail is string && data.primaryEmail.size() >= 5 && data.primaryEmail.size() <= 160
+        && data.primaryEmail.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && data.allowedEmails is list && data.allowedEmails.size() >= 1 && data.allowedEmails.size() <= 15
+        && data.allowedEmails[0] is string && data.allowedEmails[0].size() >= 5 && data.allowedEmails[0].size() <= 160
+        && data.updatedBy is string && data.updatedBy.size() >= 5 && data.updatedBy.size() <= 160
+        && data.updatedAt == request.time;
+    }
+
+    // --- Collection Rules ---
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /siteSettings/brand {
+      allow get: if true;
+      allow create, update: if isAdmin() && isValidBrandSettings(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /siteSettings/contact {
+      allow get: if true;
+      allow create, update: if isAdmin() && isValidContactSettings(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /siteSettings/catalog {
+      allow get: if true;
+      allow create, update: if isAdmin() && isValidCatalogState(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow get: if isValidId(serviceId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(serviceId) && isValidService(incoming());
+      allow delete: if isAdmin() && isValidId(serviceId);
+    }
+
+    match /portfolio/{projectId} {
+      allow get: if isValidId(projectId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(projectId) && isValidPortfolio(incoming());
+      allow delete: if isAdmin() && isValidId(projectId);
+    }
+
+    match /portfolioVideos/{videoId} {
+      allow get: if isValidId(videoId);
+      allow list: if false;
+      allow create, update: if isAdmin() && isValidId(videoId) && isValidPortfolioVideo(incoming());
+      allow delete: if isAdmin() && isValidId(videoId);
+
+      match /chunks/{chunkId} {
+        allow get: if isValidId(videoId) && isValidId(chunkId);
+        allow list: if false;
+        allow create, update: if isAdmin()
+          && isValidId(videoId)
+          && isValidId(chunkId)
+          && isValidPortfolioVideoChunk(incoming())
+          && (
+            exists(/databases/$(database)/documents/portfolioVideos/$(videoId)) ||
+            existsAfter(/databases/$(database)/documents/portfolioVideos/$(videoId))
+          );
+        allow delete: if isAdmin() && isValidId(videoId) && isValidId(chunkId);
+      }
+    }
+
+    match /pricingTiers/{tierId} {
+      allow get: if isValidId(tierId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(tierId) && isValidPricingTier(incoming());
+      allow delete: if isAdmin() && isValidId(tierId);
+    }
+
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(testimonialId) && isValidTestimonial(incoming());
+      allow delete: if isAdmin() && isValidId(testimonialId);
+    }
+
+    match /enquiries/{enquiryId} {
+      // PII-protected: Only admins can read or list enquiries
+      allow get: if isAdmin() && isValidId(enquiryId);
+      allow list: if isAdmin();
+
+      // Visitors can submit new enquiries with strict initial state & server timestamps
+      allow create: if isValidId(enquiryId)
+        && isValidEnquiry(incoming())
+        && incoming().status == 'new'
+        && incoming().adminNotes == ''
+        && incoming().createdAt == request.time;
+
+      // Only admins can update status/notes (createdAt immutable)
+      allow update: if isAdmin()
+        && isValidId(enquiryId)
+        && isValidEnquiry(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt']);
+
+      allow delete: if isAdmin() && isValidId(enquiryId);
+    }
+
+    match /admins/{adminId} {
+      allow get: if isAdmin() && isValidId(adminId);
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(adminId) && isValidAdminUser(incoming());
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+
+    match /security/adminAccess {
+      allow get: if isAdmin();
+      allow create, update: if isAdmin() && isValidAdminAccessConfig(incoming());
+      allow delete: if false;
+    }
+  }
+}

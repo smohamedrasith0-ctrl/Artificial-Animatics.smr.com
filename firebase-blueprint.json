@@ -1,0 +1,481 @@
+{
+  "entities": {
+    "BrandSettings": {
+      "title": "BrandSettings",
+      "description": "Public brand identity settings including official logo URL and agency copy.",
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "tagline": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 240
+        },
+        "logoUrl": {
+          "type": "string",
+          "maxLength": 400000
+        },
+        "aboutHeadline": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 140
+        },
+        "aboutDescription": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1200
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["companyName", "tagline", "logoUrl", "aboutHeadline", "aboutDescription", "updatedAt"]
+    },
+    "ContactSettings": {
+      "title": "ContactSettings",
+      "description": "Public studio contact endpoints configurable by the administrator.",
+      "type": "object",
+      "properties": {
+        "whatsappNumber": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "instagramUrl": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "contactEmail": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["whatsappNumber", "instagramUrl", "contactEmail", "updatedAt"]
+    },
+    "CatalogState": {
+      "title": "CatalogState",
+      "description": "Tracks whether default catalog collections have been initialized/modified by an admin so deleted items stay permanently deleted.",
+      "type": "object",
+      "properties": {
+        "portfolioInitialized": {
+          "type": "boolean"
+        },
+        "servicesInitialized": {
+          "type": "boolean"
+        },
+        "pricingInitialized": {
+          "type": "boolean"
+        },
+        "testimonialsInitialized": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "portfolioInitialized",
+        "servicesInitialized",
+        "pricingInitialized",
+        "testimonialsInitialized",
+        "updatedAt"
+      ]
+    },
+    "ServiceItem": {
+      "title": "ServiceItem",
+      "description": "AI video production service offering.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 400
+        },
+        "iconName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "order": {
+          "type": "number"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "description", "iconName", "order", "featured", "active", "updatedAt"]
+    },
+    "PortfolioItem": {
+      "title": "PortfolioItem",
+      "description": "Video portfolio showcase item with category, thumbnail, and preview link.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Advertisements",
+            "Real Estate",
+            "Product Videos",
+            "Business Promotions",
+            "Creative Animations"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400000
+        },
+        "videoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "clientName": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "isPlaceholder": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "title",
+        "category",
+        "description",
+        "thumbnailUrl",
+        "videoUrl",
+        "duration",
+        "clientName",
+        "isPlaceholder",
+        "order",
+        "updatedAt"
+      ]
+    },
+    "PortfolioVideo": {
+      "title": "PortfolioVideo",
+      "description": "Metadata for an admin-uploaded gallery video stored across chunk documents.",
+      "type": "object",
+      "properties": {
+        "mimeType": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 60
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "totalChunks": {
+          "type": "number"
+        },
+        "totalBytes": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["mimeType", "fileName", "totalChunks", "totalBytes", "updatedAt"]
+    },
+    "PortfolioVideoChunk": {
+      "title": "PortfolioVideoChunk",
+      "description": "Base64 chunk of an uploaded gallery video.",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "number"
+        },
+        "data": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500000
+        }
+      },
+      "required": ["index", "data"]
+    },
+    "PricingTier": {
+      "title": "PricingTier",
+      "description": "Agency pricing tier configurable by admin.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "priceLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 260
+        },
+        "features": {
+          "type": "array"
+        },
+        "highlighted": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "priceLabel", "summary", "features", "highlighted", "order", "updatedAt"]
+    },
+    "TestimonialItem": {
+      "title": "TestimonialItem",
+      "description": "Client testimonial item with sample flag and rating.",
+      "type": "object",
+      "properties": {
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "role": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "company": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 600
+        },
+        "rating": {
+          "type": "number"
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 400000
+        },
+        "isSample": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "customerName",
+        "role",
+        "company",
+        "quote",
+        "rating",
+        "photoUrl",
+        "isSample",
+        "order",
+        "updatedAt"
+      ]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Customer project enquiry submitted via contact form (PII protected).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "businessName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "email": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 160,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        "whatsapp": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 30
+        },
+        "serviceRequired": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "projectDescription": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 3000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "in_review", "replied", "archived"]
+        },
+        "adminNotes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "businessName",
+        "email",
+        "whatsapp",
+        "serviceRequired",
+        "projectDescription",
+        "status",
+        "adminNotes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized administrator registry entry.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "addedAt"]
+    },
+    "AdminAccessConfig": {
+      "title": "AdminAccessConfig",
+      "description": "Security configuration defining the primary admin Google account and authorized admin email allowlist.",
+      "type": "object",
+      "properties": {
+        "primaryEmail": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 160,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        "allowedEmails": {
+          "type": "array"
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["primaryEmail", "allowedEmails", "updatedBy", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/BrandSettings" },
+      "description": "Public studio configuration documents ('brand', 'contact', and 'catalog')."
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/ServiceItem" },
+      "description": "AI video production services catalog."
+    },
+    "/portfolio/{projectId}": {
+      "schema": { "$ref": "#/entities/PortfolioItem" },
+      "description": "Video portfolio showcase items."
+    },
+    "/portfolioVideos/{videoId}": {
+      "schema": { "$ref": "#/entities/PortfolioVideo" },
+      "description": "Metadata for uploaded portfolio gallery videos."
+    },
+    "/portfolioVideos/{videoId}/chunks/{chunkId}": {
+      "schema": { "$ref": "#/entities/PortfolioVideoChunk" },
+      "description": "Chunked payload documents for uploaded portfolio gallery videos."
+    },
+    "/pricingTiers/{tierId}": {
+      "schema": { "$ref": "#/entities/PricingTier" },
+      "description": "Pricing tier cards."
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": { "$ref": "#/entities/TestimonialItem" },
+      "description": "Client testimonials."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/Enquiry" },
+      "description": "Customer contact enquiries containing PII; writable by visitors on create, readable/updatable/deletable strictly by admins."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Legacy admin role registry."
+    },
+    "/security/adminAccess": {
+      "schema": { "$ref": "#/entities/AdminAccessConfig" },
+      "description": "Dynamic admin security allowlist controlling which verified Google accounts can access the Admin Control Portal."
+    }
+  }
+}

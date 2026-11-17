@@ -1,0 +1,6 @@
+{
+  "name": "Artificial Animatics",
+  "description": "Next-generation AI video production, 3D motion graphics, and creative digital advertising agency.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
